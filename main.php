@@ -1,11 +1,8 @@
 <?php
-<<<<<<< HEAD
+
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__);
 require_once "services/EmployeeManager.php";
-=======
 
-require_once "EmployeeManager.php";
->>>>>>> 51ec0092c5bfb70883bd17502de96660e31198f4
 
 /**
  * Main Class
