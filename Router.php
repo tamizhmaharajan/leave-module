@@ -15,17 +15,14 @@ class Router
 
     public function dispatch(string $method, string $path): void
     {
-        foreach ($this->routes as $route)
-        {
-            if ($route["method"] !== strtoupper($method))
-            {
+        foreach ($this->routes as $route) {
+            if ($route["method"] !== strtoupper($method)) {
                 continue;
             }
 
             $params = $this->match($route["pattern"], $path);
 
-            if ($params !== null)
-            {
+            if ($params !== null) {
                 call_user_func_array($route["handler"], $params);
                 return;
             }
@@ -44,21 +41,20 @@ class Router
         $pattern_parts = array_values(array_filter(explode("/", $pattern), "strlen"));
         $path_parts = array_values(array_filter(explode("/", $path), "strlen"));
 
-        if (count($pattern_parts) !== count($path_parts))
-        {
+        if (count($pattern_parts) !== count($path_parts)) {
             return null;
         }
 
         $params = [];
 
-        foreach ($pattern_parts as $i => $part)
+        foreach ($pattern_parts as $index => $part) 
         {
-            if (str_starts_with($part, "{") && str_ends_with($part, "}"))
+
+            if (preg_match('/^{.+}$/', $part)) 
             {
-                $params[] = $path_parts[$i];
-            }
-            elseif ($part !== $path_parts[$i])
-            {
+                $params[] = $path_parts[$index];
+
+            }elseif ($part !== $path_parts[$index]) {
                 return null;
             }
         }
