@@ -16,14 +16,14 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
 
     private array $employee_master_list = [];
     private array $employee_transactional_list = [];
-
+    private EmployeeRepository $employee_repository;
     private TransactionalRepository $transaction_repository;
 
     public function __construct()
     {
-        $employee_repository = new EmployeeRepository();
+        $this->employee_repository = new EmployeeRepository();
 
-        $this->employee_master_list = $employee_repository->loadEmployees();
+        $this->employee_master_list = $this->employee_repository->loadEmployees();
 
         $this->transaction_repository = new TransactionalRepository();
 
@@ -46,9 +46,9 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
 
         $this->transaction_repository->saveTransaction($employee->getId(), $leave_type, $leave_days, $manager_status);
     }
-    private function getEmployeeById(string $_id): ?Employee
+    private function getEmployeeByEmployeeId(string $_employee_id): ?Employee
     {
-        return $this->employee_master_list[$_id] ?? null;
+        return $this->employee_master_list[$_employee_id] ?? null;
     }
 
     private function validateInput(string $_message, string $_pattern): string
@@ -73,7 +73,7 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
             "/^[1-9][0-9]*$/"
         );
 
-        $employee = $this->getEmployeeById($employee_id);
+        $employee = $this->getEmployeeByEmployeeId($employee_id);
 
         if ($employee === null) {
             echo "Employee Not Found\n";
@@ -145,12 +145,15 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
             echo "\nLeave Rejected\n";
         }
     }
-    public function getEmployeeDetails(string $_employee_id): array
+    public function getEmployeeDetails(int $_id): array
     {
-        $employee = $this->getEmployeeById($_employee_id);
+        $employee = $this->employee_repository->getEmployeeById($_id);
 
         if ($employee === null) {
-            return ["status" => false, "message" => "Employee Not Found"];
+            return [
+                "status" => false,
+                "message" => "Employee Not Found"
+            ];
         }
 
         return [
@@ -166,9 +169,9 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
             ]
         ];
     }
-    public function applyLeave(int $_id, int $_leave_days, int $_leave_type): array
+    public function applyLeave(string $_employee_id, int $_leave_days, int $_leave_type): array
     {
-        $employee = $this->getEmployeeById((string) $_id);
+        $employee = $this->getEmployeeByEmployeeId($_employee_id);
         if ($employee == null) {
             return ["status" => false, "message" => "Employee Not Found"];
         }

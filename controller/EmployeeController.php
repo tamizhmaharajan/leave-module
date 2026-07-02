@@ -22,7 +22,7 @@ class EmployeeController
     public function applyLeave(): void
     {
         $data = json_decode(file_get_contents("php://input"), true);
-        echo json_encode($this->employee_manager->applyLeave((int) $data["id"], (int) $data["leave_days"], (int) $data["leave_type_id"]), JSON_PRETTY_PRINT);
+        echo json_encode($this->employee_manager->applyLeave( $data["employee_id"], (int) $data["leave_days"], (int) $data["leave_type_id"]), JSON_PRETTY_PRINT);
     }
 
     public function approveLeave(): void

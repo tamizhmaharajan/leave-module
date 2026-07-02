@@ -2,7 +2,7 @@
 
 require_once "config/Database.php";
 require_once "models/TransactionalDetails.php";
-require_once "DatabaseTrait.php";
+require_once "traits/DatabaseTrait.php";
 
 class TransactionalRepository
 {
@@ -25,7 +25,7 @@ class TransactionalRepository
         $employee_transactional_list = [];
 
         $query = "SELECT * FROM save_transactional_details";
-        $result = $this->fetchAll($query);
+        $result = $this->getResult($query);
 
         while ($transaction = $result->fetch_assoc()) {
             $employee_transactional_list[] = new TransactionalDetails(
@@ -58,12 +58,7 @@ class TransactionalRepository
         $this->executeQuery(
             $query,
             "iiii",
-            [
-                $_employee_id,
-                $_leave_days,
-                $_leave_type,
-                $status
-            ]
+            [$_employee_id, $_leave_days, $_leave_type, $status]
         );
     }
 
@@ -79,7 +74,7 @@ class TransactionalRepository
                   FROM leave_type
                   ORDER BY id";
 
-        $result = $this->fetchAll($query);
+        $result = $this->getResult($query);
 
         while ($row = $result->fetch_assoc()) {
             $leave_types[] = [
@@ -94,22 +89,21 @@ class TransactionalRepository
     /**
      * Approve Leave
      */
-    /**
-     * Approve Leave
-     */
-    public function approveLeave(string $_employee_id, bool $_approval_status)
+    public function approveLeave(string $_employee_id, bool $_approval_status): bool
     {
         $query = "UPDATE save_transactional_details std
-              INNER JOIN employee_details ed
-              ON std.employee_id = ed.id
-              SET std.manager_approval_status = ?
-              WHERE ed.employee_id = ?";
+                  INNER JOIN employee_details ed
+                  ON std.employee_id = ed.id
+                  SET std.manager_approval_status = ?
+                  WHERE ed.employee_id = ?";
 
         $status = $_approval_status ? 1 : 0;
 
-        $statement = $this->connection->prepare($query);
-        $statement->bind_param("is", $status, $_employee_id);
-        $statement->execute();
+        $statement = $this->executeQuery(
+            $query,
+            "is",
+            [$status, $_employee_id]
+        );
 
         return $statement->affected_rows > 0;
     }
@@ -135,7 +129,7 @@ class TransactionalRepository
                           ON std.leave_type_id = lt.id
                   ORDER BY std.id";
 
-        $result = $this->fetchAll($query);
+        $result = $this->getResult($query);
 
         while ($row = $result->fetch_assoc()) {
             $transaction_history[] = [
@@ -160,26 +154,24 @@ class TransactionalRepository
         $leave_history = [];
 
         $query = "SELECT std.id,
-                     ed.employee_id,
-                     ed.employee_name,
-                     std.leave_days,
-                     lt.Leave_type_name,
-                     std.manager_approval_status
-              FROM save_transactional_details std
-              INNER JOIN employee_details ed
-                      ON std.employee_id = ed.id
-              INNER JOIN leave_type lt
-                      ON std.leave_type_id = lt.id
-              WHERE ed.employee_id = ?
-              ORDER BY std.id";
+                         ed.employee_id,
+                         ed.employee_name,
+                         std.leave_days,
+                         lt.Leave_type_name,
+                         std.manager_approval_status
+                  FROM save_transactional_details std
+                  INNER JOIN employee_details ed
+                          ON std.employee_id = ed.id
+                  INNER JOIN leave_type lt
+                          ON std.leave_type_id = lt.id
+                  WHERE ed.employee_id = ?
+                  ORDER BY std.id";
 
-        $statement = $this->executeQuery(
+        $result = $this->getResult(
             $query,
             "s",
             [$_employee_id]
         );
-
-        $result = $statement->get_result();
 
         while ($row = $result->fetch_assoc()) {
             $leave_history[] = [
@@ -194,6 +186,7 @@ class TransactionalRepository
 
         return $leave_history;
     }
+
     /**
      * Get Transaction By Date
      * @return array
@@ -216,13 +209,11 @@ class TransactionalRepository
                           ON std.leave_type_id = lt.id
                   WHERE DATE(std.created_at) = ?";
 
-        $statement = $this->executeQuery(
+        $result = $this->getResult(
             $query,
             "s",
             [$_date]
         );
-
-        $result = $statement->get_result();
 
         while ($row = $result->fetch_assoc()) {
             $transaction_history[] = [
@@ -238,4 +229,5 @@ class TransactionalRepository
 
         return $transaction_history;
     }
+    
 }

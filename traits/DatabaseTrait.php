@@ -6,7 +6,13 @@ trait DatabaseTrait
     {
         $statement = $this->connection->prepare($_query);
 
-        if ($_types !== "") {
+        if (!$statement) 
+        {
+            throw new Exception($this->connection->error);
+        }
+
+        if ($_types !== "") 
+        {
             $statement->bind_param($_types, ...$_params);
         }
 
@@ -14,9 +20,9 @@ trait DatabaseTrait
 
         return $statement;
     }
-
-    protected function fetchAll(string $_query): mysqli_result
+    protected function getResult(string $_query, string $_types = "", array $_params = []): mysqli_result
     {
-        return $this->connection->query($_query);
+        return $this->executeQuery($_query, $_types, $_params)->get_result();
     }
+
 }
