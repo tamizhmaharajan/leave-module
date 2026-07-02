@@ -2,9 +2,11 @@
 
 require_once "config/Database.php";
 require_once "models/TransactionalDetails.php";
+require_once "DatabaseTrait.php"
 
 class TransactionalRepository
 {
+    use DatabaseTrait;
     private mysqli $connection;
 
     public function __construct()

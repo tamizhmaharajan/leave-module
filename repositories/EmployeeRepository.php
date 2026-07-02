@@ -2,6 +2,7 @@
 
 require_once "config/Database.php";
 require_once "models/Employee.php";
+require_once "DatabaseTrait.php";
 
 class EmployeeRepository
 {
