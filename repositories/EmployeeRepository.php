@@ -6,29 +6,21 @@ require_once "DatabaseTrait.php";
 
 class EmployeeRepository
 {
+    use DatabaseTrait;
+
     private mysqli $connection;
 
-    /**
-     * Constructor
-     * Get Database Connection
-     */
     public function __construct()
     {
-
         $database = new Database();
         $this->connection = $database->getConnection();
     }
 
-    /**
-     * Load all employees from database
-     * @return array
-     */
     public function loadEmployees(): array
     {
         $employee_master_list = [];
 
-        $result = $this->connection->query("SELECT * FROM employee_details");
-
+        $result = $this->fetchAll("SELECT * FROM employee_details");
         while ($employee = $result->fetch_assoc()) {
             $employee_master_list[$employee['id']] = new Employee(
                 $employee['id'],
@@ -44,4 +36,3 @@ class EmployeeRepository
         return $employee_master_list;
     }
 }
-?>

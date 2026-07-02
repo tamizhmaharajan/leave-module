@@ -10,7 +10,6 @@ require_once "repositories/TransactionalRepository.php";
 
 class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
 {
-    use LeaveCalculationTrait;
 
     private const CASUAL_LEAVE = 1;
     private const MEDICAL_LEAVE = 2;
@@ -188,6 +187,25 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
                 "manager_approval_status" => $manager_status
             ]
         ];
+    }
+    /**
+     * Calculate total approved leave days
+     * @param int $_id
+     * @param int $_leave_type
+     * @return int
+     */
+    private function getUsedLeaveDays(int $_id, int $_leave_type): int
+    {
+        $used_days = 0;
+        foreach ($this->employee_transactional_list as $transaction)
+        {
+            if ($transaction->getTdId() == $_id && $transaction->getTdLeaveType() == $_leave_type && $transaction->getTdStatus()) 
+            {
+                $used_days += $transaction->getTdLeaveDays();
+            }
+        }
+
+        return $used_days;
     }
 }
 ?>
