@@ -7,7 +7,7 @@ class TransactionalDetails
     private int $leave_type;
     private bool $manager_approval_status;
 
-    public function __construct(int $_id,int $_employee_id, int $_leave_days, int $_leave_type,bool $_manager_approval_status) 
+    public function __construct(int $_id, int $_employee_id, int $_leave_days, int $_leave_type, bool $_manager_approval_status)
     {
         $this->id = $_id;
         $this->employee_id = $_employee_id;
@@ -17,7 +17,7 @@ class TransactionalDetails
     }
     public function getTdId(): int
     {
-        return $this->getTdId();
+        return $this->id;
     }
     public function getTdEmployeeId(): int
     {

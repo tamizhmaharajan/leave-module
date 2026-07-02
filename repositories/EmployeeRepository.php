@@ -21,8 +21,9 @@ class EmployeeRepository
         $employee_master_list = [];
 
         $result = $this->fetchAll("SELECT * FROM employee_details");
+
         while ($employee = $result->fetch_assoc()) {
-            $employee_master_list[$employee['id']] = new Employee(
+            $employee_master_list[$employee['employee_id']] = new Employee(
                 $employee['id'],
                 $employee['employee_id'],
                 $employee['employee_name'],

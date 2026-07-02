@@ -2,7 +2,6 @@
 
 require_once "models/Employee.php";
 require_once "models/TransactionalDetails.php";
-require_once "LeaveCalculationTrait.php";
 require_once "LeaveApproval.php";
 require_once "LeaveManagerInterface.php";
 require_once "repositories/EmployeeRepository.php";
@@ -97,7 +96,7 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
         $leave_types = $this->transaction_repository->getLeaveTypesFromDB();
 
         foreach ($leave_types as $type) {
-            echo $type["id"]."-".$type["leave_type_name"].PHP_EOL;
+            echo $type["id"] . "-" . $type["leave_type_name"] . PHP_EOL;
         }
 
         $valid_id = implode("|", array_column($leave_types, "id"));
@@ -167,7 +166,7 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
             ]
         ];
     }
-    public function applyLeave(int $_id, int $_leave_days, int $_leave_type): array 
+    public function applyLeave(int $_id, int $_leave_days, int $_leave_type): array
     {
         $employee = $this->getEmployeeById((string) $_id);
         if ($employee == null) {
@@ -175,13 +174,14 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
         }
         $manager_status = $this->managerApproval($employee, $_leave_days, $_leave_type);
 
-        $this->transaction_repository->saveTransaction($employee->getId(),$_leave_type,$_leave_days,$manager_status);
+        $this->transaction_repository->saveTransaction($employee->getId(), $_leave_type, $_leave_days, $manager_status);
 
         return [
             "status" => $manager_status,
             "message" => $manager_status ? "Leave Applied Successfully" : "Leave Rejected",
             "data" => [
                 "employee_id" => $employee->getId(),
+                "employee_name" => $employee->getEmployeeName(),
                 "leave_days" => $_leave_days,
                 "leave_type_id" => $_leave_type,
                 "manager_approval_status" => $manager_status
@@ -190,17 +190,20 @@ class EmployeeManager extends LeaveApproval implements LeaveManagerInterface
     }
     /**
      * Calculate total approved leave days
-     * @param int $_id
+     * @param int $_employee_id
      * @param int $_leave_type
      * @return int
      */
-    private function getUsedLeaveDays(int $_id, int $_leave_type): int
+    private function getUsedLeaveDays(int $_employee_id, int $_leave_type): int
     {
         $used_days = 0;
-        foreach ($this->employee_transactional_list as $transaction)
-        {
-            if ($transaction->getTdId() == $_id && $transaction->getTdLeaveType() == $_leave_type && $transaction->getTdStatus()) 
-            {
+
+        foreach ($this->employee_transactional_list as $transaction) {
+            if (
+                $transaction->getTdEmployeeId() == $_employee_id &&
+                $transaction->getTdLeaveType() == $_leave_type &&
+                $transaction->getTdStatus()
+            ) {
                 $used_days += $transaction->getTdLeaveDays();
             }
         }

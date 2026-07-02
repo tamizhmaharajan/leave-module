@@ -29,11 +29,11 @@ class TransactionalRepository
 
         while ($transaction = $result->fetch_assoc()) {
             $employee_transactional_list[] = new TransactionalDetails(
-                (int)$transaction['id'],
-                (int)$transaction['employee_id'],
-                (int)$transaction['leave_days'],
-                (int)$transaction['leave_type_id'],
-                (bool)$transaction['manager_approval_status']
+                (int) $transaction['id'],
+                (int) $transaction['employee_id'],
+                (int) $transaction['leave_days'],
+                (int) $transaction['leave_type_id'],
+                (bool) $transaction['manager_approval_status']
             );
         }
 
@@ -48,8 +48,7 @@ class TransactionalRepository
         int $_leave_type,
         int $_leave_days,
         bool $_manager_approval_status
-    ): void
-    {
+    ): void {
         $query = "INSERT INTO save_transactional_details
                   (employee_id, leave_days, leave_type_id, manager_approval_status)
                   VALUES (?, ?, ?, ?)";
@@ -84,7 +83,7 @@ class TransactionalRepository
 
         while ($row = $result->fetch_assoc()) {
             $leave_types[] = [
-                "id" => (int)$row["id"],
+                "id" => (int) $row["id"],
                 "leave_type_name" => $row["Leave_type_name"]
             ];
         }
@@ -95,22 +94,22 @@ class TransactionalRepository
     /**
      * Approve Leave
      */
-    public function approveLeave(int $_transaction_id, bool $_approval_status): bool
+    /**
+     * Approve Leave
+     */
+    public function approveLeave(string $_employee_id, bool $_approval_status)
     {
-        $query = "UPDATE save_transactional_details
-                  SET manager_approval_status = ?
-                  WHERE id = ?";
+        $query = "UPDATE save_transactional_details std
+              INNER JOIN employee_details ed
+              ON std.employee_id = ed.id
+              SET std.manager_approval_status = ?
+              WHERE ed.employee_id = ?";
 
         $status = $_approval_status ? 1 : 0;
 
-        $statement = $this->executeQuery(
-            $query,
-            "ii",
-            [
-                $status,
-                $_transaction_id
-            ]
-        );
+        $statement = $this->connection->prepare($query);
+        $statement->bind_param("is", $status, $_employee_id);
+        $statement->execute();
 
         return $statement->affected_rows > 0;
     }
@@ -140,12 +139,12 @@ class TransactionalRepository
 
         while ($row = $result->fetch_assoc()) {
             $transaction_history[] = [
-                "transaction_id" => (int)$row["id"],
+                "transaction_id" => (int) $row["id"],
                 "employee_id" => $row["employee_id"],
                 "employee_name" => $row["employee_name"],
-                "leave_days" => (int)$row["leave_days"],
+                "leave_days" => (int) $row["leave_days"],
                 "leave_type" => $row["Leave_type_name"],
-                "manager_approval_status" => (bool)$row["manager_approval_status"]
+                "manager_approval_status" => (bool) $row["manager_approval_status"]
             ];
         }
 
@@ -156,46 +155,45 @@ class TransactionalRepository
      * Get Employee Leave History
      * @return array
      */
-    public function getEmployeeLeaveHistory(int $_id): array
+    public function getEmployeeLeaveHistory(string $_employee_id): array
     {
         $leave_history = [];
 
         $query = "SELECT std.id,
-                         ed.employee_id,
-                         ed.employee_name,
-                         std.leave_days,
-                         lt.Leave_type_name,
-                         std.manager_approval_status
-                  FROM save_transactional_details std
-                  INNER JOIN employee_details ed
-                          ON std.employee_id = ed.id
-                  INNER JOIN leave_type lt
-                          ON std.leave_type_id = lt.id
-                  WHERE std.employee_id = ?
-                  ORDER BY std.id";
+                     ed.employee_id,
+                     ed.employee_name,
+                     std.leave_days,
+                     lt.Leave_type_name,
+                     std.manager_approval_status
+              FROM save_transactional_details std
+              INNER JOIN employee_details ed
+                      ON std.employee_id = ed.id
+              INNER JOIN leave_type lt
+                      ON std.leave_type_id = lt.id
+              WHERE ed.employee_id = ?
+              ORDER BY std.id";
 
         $statement = $this->executeQuery(
             $query,
-            "i",
-            [$_id]
+            "s",
+            [$_employee_id]
         );
 
         $result = $statement->get_result();
 
         while ($row = $result->fetch_assoc()) {
             $leave_history[] = [
-                "transaction_id" => (int)$row["id"],
+                "transaction_id" => (int) $row["id"],
                 "employee_id" => $row["employee_id"],
                 "employee_name" => $row["employee_name"],
-                "leave_days" => (int)$row["leave_days"],
+                "leave_days" => (int) $row["leave_days"],
                 "leave_type" => $row["Leave_type_name"],
-                "manager_approval_status" => (bool)$row["manager_approval_status"]
+                "manager_approval_status" => (bool) $row["manager_approval_status"]
             ];
         }
 
         return $leave_history;
     }
-
     /**
      * Get Transaction By Date
      * @return array
@@ -228,12 +226,12 @@ class TransactionalRepository
 
         while ($row = $result->fetch_assoc()) {
             $transaction_history[] = [
-                "transaction_id" => (int)$row["id"],
+                "transaction_id" => (int) $row["id"],
                 "employee_id" => $row["employee_id"],
                 "employee_name" => $row["employee_name"],
-                "leave_days" => (int)$row["leave_days"],
+                "leave_days" => (int) $row["leave_days"],
                 "leave_type" => $row["Leave_type_name"],
-                "manager_approval_status" => (bool)$row["manager_approval_status"],
+                "manager_approval_status" => (bool) $row["manager_approval_status"],
                 "created_at" => $row["created_at"]
             ];
         }
